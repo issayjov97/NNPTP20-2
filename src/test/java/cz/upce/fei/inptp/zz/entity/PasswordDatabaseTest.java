@@ -3,7 +3,8 @@ package cz.upce.fei.inptp.zz.entity;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.time.LocalDateTime;
+import java.security.InvalidParameterException;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import static cz.upce.fei.inptp.zz.entity.Parameter.StandardizedParameters;
@@ -17,7 +18,11 @@ public class PasswordDatabaseTest {
 
     @Before
     public void setUp() {
-        database = new PasswordDatabase(null, "password0");
+        database = new PasswordDatabase.PasswordDatabaseBuilder()
+                .setFile(null)
+                .setPassword("password0")
+                .setPasswords(new ArrayList<>())
+                .createPasswordDatabase();
     }
 
     @Test
@@ -44,12 +49,42 @@ public class PasswordDatabaseTest {
         assertNull(outputPassword1);
     }
 
-    private Password preparePassword(int id, String password, String tittle, String website, String description) {
+    public static Password preparePassword(int id, String password, String tittle, String website, String description) {
         HashMap<String, Parameter> parameters = new HashMap<>();
         parameters.put(StandardizedParameters.TITLE, new TextParameter(tittle));
         parameters.put(StandardizedParameters.WEBSITE, new TextParameter(website));
         parameters.put(StandardizedParameters.DESCRIPTION, new TextParameter(description));
-        parameters.put(StandardizedParameters.EXPIRATION_DATETIME, new Parameter.DateTimeParameter(LocalDateTime.now().plusYears(1L)));
-        return new Password(id, password, parameters);
+        parameters.put(StandardizedParameters.EXPIRATION_DATETIME, null);
+        return new Password.PasswordBuilder()
+                .setId(id)
+                .setPassword(password)
+                .setParameters(parameters)
+                .createPassword();
+    }
+
+    @Test
+    public void getPasswordByIdTest() throws InvalidParameterException {
+        Password expectedPassword = new Password.PasswordBuilder()
+                        .setId(2)
+                        .setPassword("password3")
+                        .createPassword();
+        
+        this.database.add(preparePassword(0, "password1", "email", "seznam.cz", "Password for my email"));
+        this.database.add(preparePassword(1, "password2", "email", "gmail.com", "Password for my email"));
+        this.database.add(preparePassword(2, "password3", "tiktok", "tiktok.com", "Password for social media"));
+
+        Password password = this.database.getPasswordById(2);
+        assertEquals(password, expectedPassword);
+    }
+
+    @Test
+    public void editPasswordTest() {
+        String expectedPassword = "Password";
+        Password password = new Password.PasswordBuilder()
+                        .setId(0)
+                        .setPassword("paswd")
+                        .createPassword();
+        password.setPassword("Password");
+        assertEquals(password.getPassword(), expectedPassword);
     }
 }

@@ -6,6 +6,7 @@
 package cz.upce.fei.inptp.zz.entity;
 
 import java.io.File;
+import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -16,13 +17,13 @@ import java.util.Objects;
  */
 public class PasswordDatabase {
     private File file;
-    private String passwd;
+    private String password;
     
     private List<Password> passwords = new ArrayList<>();
 
-    public PasswordDatabase(File file, String passwd, List<Password> passwords) {
+    private PasswordDatabase(File file, String password, List<Password> passwords) {
         this.file = file;
-        this.passwd = passwd;
+        this.password = password;
         this.passwords = passwords;
     }
 
@@ -45,11 +46,51 @@ public class PasswordDatabase {
         return file;
     }
 
-    public String getPasswd() {
-        return passwd;
+    public String getPassword() {
+        return password;
     }
 
     public List<Password> getPasswords() {
         return passwords;
+    }
+
+    public Password getPasswordById(int passwordId) throws InvalidParameterException {
+        for (Password password : this.getPasswords()){
+            if (password.getId() == passwordId){
+                return password;
+            }
+        }
+        throw new InvalidParameterException("Password ID not found");
+    }
+
+    public void editPassword(Password passwordToEdit, String newPassword) {
+        if (passwordToEdit != null && newPassword != null){
+            passwordToEdit.setPassword(newPassword);
+        }          
+    }
+
+    public static class PasswordDatabaseBuilder {
+        private File file;
+        private String password;
+        private List<Password> passwords;
+
+        public PasswordDatabaseBuilder setFile(File file) {
+            this.file = file;
+            return this;
+        }
+
+        public PasswordDatabaseBuilder setPassword(String password) {
+            this.password = password;
+            return this;
+        }
+
+        public PasswordDatabaseBuilder setPasswords(List<Password> passwords) {
+            this.passwords = passwords;
+            return this;
+        }
+
+        public PasswordDatabase createPasswordDatabase() {
+            return new PasswordDatabase(file, password, passwords);
+        }
     }
 }
